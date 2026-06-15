@@ -16,6 +16,9 @@ public class Project10 : ModuleRules
 			"InputCore", 
 			"EnhancedInput",
 			"Test",
+            "UMG",  
+            "Slate",    
+            "SlateCore"  
 		});
 
 

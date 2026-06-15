@@ -2,6 +2,7 @@
 
 #include "Project10Character.h"
 #include "Test/TestActor.h" 
+#include "Test/IndianPokerGameMode.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -11,6 +12,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Components/TextBlock.h"
+#include "Blueprint/UserWidget.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -53,6 +57,12 @@ AProject10Character::AProject10Character()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	HeadWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HeadWidget"));
+	HeadWidgetComponent->SetupAttachment(GetMesh(), FName("head"));
+	HeadWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	HeadWidgetComponent->SetDrawSize(FVector2D(80.f, 80.f));
+	HeadWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 80.f));
 }
 
 void AProject10Character::BeginPlay()
@@ -65,6 +75,16 @@ void AProject10Character::BeginPlay()
 		GetActorTransform(),
 		Params
 	);
+
+	AIndianPokerGameMode* GM =
+		Cast<AIndianPokerGameMode>(GetWorld()->GetAuthGameMode());
+
+	if (GM)
+	{
+		
+		GM->SetPlayerAction(0, EPlayerAction::Attack);
+		GM->SetPlayerAction(1, EPlayerAction::Defend);
+	}
 }
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -97,11 +117,18 @@ void AProject10Character::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AProject10Character::Look);
+
+		if (ActionModeAction)
+		{
+			EnhancedInputComponent->BindAction(ActionModeAction, ETriggerEvent::Started,
+				this, &AProject10Character::ToggleActionMode);
+		}
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+
 }
 
 void AProject10Character::Move(const FInputActionValue& Value)
@@ -137,5 +164,55 @@ void AProject10Character::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AProject10Character::UpdateHeadNumber(int32 Number)
+{
+	if (!HeadWidgetComponent) return;
+
+	UUserWidget* Widget = HeadWidgetComponent->GetUserWidgetObject();
+	if (!Widget) return;
+
+	UTextBlock* Text = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("HeadNumberText")));
+
+	if (Text)
+	{
+		if (Number < 0)
+			Text->SetText(FText::FromString(TEXT("?")));
+		else
+			Text->SetText(FText::AsNumber(Number));
+	}
+}
+
+void AProject10Character::ToggleActionMode()
+{
+	bInActionMode = !bInActionMode;
+
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (!PC) return;
+
+	if (bInActionMode)
+	{
+		PC->SetShowMouseCursor(true);
+		GetCharacterMovement()->DisableMovement();
+		FInputModeGameAndUI InputMode;
+		InputMode.SetHideCursorDuringCapture(false);
+		PC->SetInputMode(InputMode);
+
+		if (GEngine)
+			GEngine->AddOnScreenDebugMessage(10, 3.f, FColor::Yellow,
+				TEXT("행동 선택 모드 ON (E키로 끄기)"));
+	}
+	else
+	{
+		PC->SetShowMouseCursor(false);
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		PC->SetInputMode(FInputModeGameOnly());
+
+		if (GEngine)
+			GEngine->AddOnScreenDebugMessage(10, 3.f, FColor::Green,
+				TEXT("행동 선택 모드 OFF"));
 	}
 }

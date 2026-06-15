@@ -10,9 +10,11 @@ public class Test : ModuleRules
         {
             "Core",
             "CoreUObject",
-            "Engine"
+            "Engine",
+            "UMG",      
+            "Slate",     
+            "SlateCore",
+            "NetCore",
         });
-
-       
     }
 }

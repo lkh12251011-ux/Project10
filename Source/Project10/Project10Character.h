@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Test/TestActor.h" 
 #include "Logging/LogMacros.h"
+#include "Components/WidgetComponent.h"
 #include "Project10Character.generated.h"
 
 class USpringArmComponent;
@@ -45,6 +46,9 @@ class AProject10Character : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ActionModeAction;
+
 public:
 	AProject10Character();
 	
@@ -57,7 +61,18 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	void ToggleActionMode();
 			
+public:
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void UpdateHeadNumber(int32 Number);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UWidgetComponent* HeadWidgetComponent;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	bool bInActionMode;
 
 protected:
 
