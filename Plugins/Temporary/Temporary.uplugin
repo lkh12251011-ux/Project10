@@ -1,0 +1,17 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Temporary",
+	"Description": "테스트용 임시 플러그인",
+	"Category": "Other",
+	"CreatedBy": "Me",
+	"CanContainContent": true,
+	"Modules": [
+		{
+			"Name": "Temporary",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
